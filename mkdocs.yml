@@ -1,0 +1,18 @@
+site_name: Cloud Native Interleaving
+site_url: https://example.com/
+repo_url: https://github.com/haconeco/cloud-native-interleaving
+repo_name: haconeco/cloud-native-interleaving
+theme:
+  name: material
+  language: ja
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+
+nav:
+  - Home: index.md
+  - Integration Guide: integration_guide.md
+  - Architecture: architecture.md
+  - Implementation Plan: implementation_plan.md
+  - Risks and Mitigation: risks_and_mitigation.md

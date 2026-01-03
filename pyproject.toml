@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cloud-native-interleaving"
+version = "0.1.0"
+description = "Cloud Native Interleaving Library for Recommendations"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+  {name = "haconeco", email = "haconeco@example.com"}
+]
+dependencies = [
+    "boto3",
+    "numpy",
+    "mmh3",
+    "pydantic"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-mock",
+    "pytest-cov"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,8 @@
+boto3
+numpy
+mmh3
+pydantic
+pytest
+pytest-mock
+pytest-cov
+mkdocs-material
