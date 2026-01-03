@@ -1,6 +1,6 @@
 ---
 trigger: glob
-globs: *project planning*,*設計*, *design*,プロジェクト計画
+globs: *project planning*,*設計*,*design*,*プロジェクト計画*
 ---
 
 以下は、前提（差し込み点＝「ランキング結果を返す直前」／同一 Lambda 呼び出し内で Interleaving／A・B のランキング生成は並行処理前提／将来 Optimized Interleaving へ拡張しやすい設計／候補件数は SSM で既に制御済み／DB 件数削減はスコープ外／Container Lambda で Layer 不可／現行 A/B は API Gateway ルーティング）をすべて反映した、**ゼロからのプロジェクト計画（アーキテクチャ検討＋実装計画＋移行計画）**です。
