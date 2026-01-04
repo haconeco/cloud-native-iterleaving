@@ -21,6 +21,7 @@ pip install cloud-native-interleaving
 | `/reco/exp/mode` | String | `INTERLEAVE`, `A`, `B` | 動作モード。`A` は既存ロジックAのみ、`INTERLEAVE` は並行実行+合成。 |
 | `/reco/exp/sampling_rate` | String | `0.0` - `1.0` | INTERLEAVE モードの適用率。`0.1` で 10% のユーザーに適用。 |
 | `/reco/exp/parallel_enabled` | String | `true` or `false` | A/B ロジックの並行実行を行うかどうか。 |
+| `/reco/exp/interleave_method` | String | `team_draft` or `optimized` | (Optional) Interleaving アルゴリズムを指定。デフォルトは `team_draft`。 |
 
 > **Note:** 適切な IAM 権限 (`ssm:GetParameters`) が Lambda 実行ロールに付与されていることを確認してください。
 
@@ -47,16 +48,17 @@ def get_user_hash(user_id: str) -> int:
 from src.config import ConfigManager
 from src.context import Context
 from src.interleaving.bucketer import Bucketer
-from src.interleaving.method import TeamDraftInterleaver
+from src.interleaving.bucketer import Bucketer
+from src.interleaving.api import get_interleaver
 from src.ranker.adapter import LambdaRankerAdapter
 from src.observability.logging import log_ranking_result
 import concurrent.futures
 import uuid
 
 # ConfigManagerはハンドラ外で初期化（キャッシュ有効化のため）
+# ConfigManagerはハンドラ外で初期化（キャッシュ有効化のため）
 config_manager = ConfigManager(ttl_seconds=60.0)
 bucketer = Bucketer()
-interleaver = TeamDraftInterleaver()
 
 def lambda_handler(event, context):
     user_id = event.get('user_id')
@@ -64,11 +66,14 @@ def lambda_handler(event, context):
     
     # 1. 設定取得
     config = config_manager.get_config()
+
+    # 2. Interleaver 取得 (Factory)
+    interleaver = get_interleaver(config.interleave_method)
     
-    # 2. モード判定
+    # 3. モード判定
     mode = bucketer.determine_mode(user_hash, config)
     
-    # 3. Context作成
+    # 4. Context作成
     ctx = Context(user_id=user_id, user_hash=user_hash, params=event)
     
     items = []
@@ -78,14 +83,14 @@ def lambda_handler(event, context):
     adapter_b = LambdaRankerAdapter(existing_logic_b)
     
     if mode == "INTERLEAVE":
-        # 4. 並行実行
+        # 5. 並行実行
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             future_a = executor.submit(adapter_a.rank, ctx)
             future_b = executor.submit(adapter_b.rank, ctx)
             list_a = future_a.result()
             list_b = future_b.result()
             
-        # 5. 合成
+        # 6. 合成
         items = interleaver.interleave(list_a, list_b)
         
     elif mode == "B":
@@ -94,7 +99,7 @@ def lambda_handler(event, context):
         # Default to A
         items = adapter_a.rank(ctx)
         
-    # 6. ログ出力 (CloudWatch Logs -> Firehose -> S3 -> Athena)
+    # 7. ログ出力 (CloudWatch Logs -> Firehose -> S3 -> Athena)
     ranking_id = str(uuid.uuid4())
     log_ranking_result(ranking_id, mode, ctx, items)
     

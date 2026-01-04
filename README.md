@@ -18,7 +18,7 @@
 ### 目標 (To-Be)
 - **API Gateway の A/B ルーティングを廃止**。
 - Lambda 内部で設定値 (SSM) に基づき、動的に A/B/Interleaving を決定。
-- Interleaving 時は A と B の結果を **Team Draft** アルゴリズム等で合成して返却。
+- Interleaving 時は A と B の結果を **Team Draft** または **Probabilistic (Optimized)** アルゴリズムで合成して返却。
 
 詳細なアーキテクチャ設計は [docs/architecture.md](docs/architecture.md) を参照してください。
 

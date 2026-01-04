@@ -2,7 +2,7 @@
 import pytest
 from typing import List
 from src.context import Item
-from src.interleaving.method import TeamDraftInterleaver
+from src.interleaving.method import TeamDraftInterleaver, OptimizedInterleaver
 
 @pytest.fixture
 def items_a():
@@ -72,3 +72,42 @@ def test_handling_empty_lists():
     
     assert len(result) == 1
     assert result[0].id == "a1"
+
+def test_optimized_interleaving_basic(items_a, items_b):
+    interleaver = OptimizedInterleaver()
+    result = interleaver.interleave(items_a, items_b)
+    
+    assert len(result) == 6
+    for item in result:
+        assert item.source_ranker in ["A", "B"]
+        assert item.prob is not None
+        assert 0.0 <= item.prob <= 1.0
+
+def test_optimized_interleaving_distribution(items_a, items_b):
+    # A1(rank0) vs B1(rank0) -> scores equal -> prob should be 0.5
+    interleaver = OptimizedInterleaver(tau=1.0)
+    
+    # Check probability calculation logic (whitebox-ish or blackbox via prob field)
+    # We can check the recorded probability in the result.
+    # Note: this depends on which was picked.
+    # If A1 picked, prob should be P(A). If B1 picked, prob should be P(B).
+    # Since scores are equal, both should be 0.5
+    
+    # But prob recording might be P(selected).
+    
+    result = interleaver.interleave(items_a, items_b)
+    first_item = result[0]
+    # For equal rank items at top, prob should be ~0.5
+    assert 0.49 < first_item.prob < 0.51
+
+def test_optimized_interleaving_deduplication():
+    items_a = [Item(id="common", score=10), Item(id="a2", score=9)]
+    items_b = [Item(id="common", score=10), Item(id="b2", score=9)]
+    
+    interleaver = OptimizedInterleaver()
+    result = interleaver.interleave(items_a, items_b)
+    
+    assert len(result) == 3
+    ids = [item.id for item in result]
+    assert ids.count("common") == 1
+

@@ -23,6 +23,6 @@
 詳細なアーキテクチャ設計は [docs/architecture.md](docs/architecture.md) を参照してください。
 
 ## ドキュメント
-- [アーキテクチャ設計](docs/architecture.md)
-- [実装・移行計画](docs/implementation_plan.md)
-- [リスクと対策](docs/risks_and_mitigation.md)
+- [アーキテクチャ設計](architecture.md)
+- [実装・移行計画](implementation_plan.md)
+- [リスクと対策](risks_and_mitigation.md)
