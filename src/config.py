@@ -9,6 +9,7 @@ class ExperimentConfig:
     mode: str
     sampling_rate: float
     parallel_enabled: bool
+    interleave_method: str = "team_draft"
 
 class ConfigManager:
     def __init__(self, ttl_seconds: float = 60.0):
@@ -37,7 +38,8 @@ class ConfigManager:
         names = [
             '/reco/exp/mode',
             '/reco/exp/sampling_rate',
-            '/reco/exp/parallel_enabled'
+            '/reco/exp/parallel_enabled',
+            '/reco/exp/interleave_method'
         ]
         
         response = self._ssm_client.get_parameters(Names=names)
@@ -49,11 +51,14 @@ class ConfigManager:
         # parallel_enabled assumes "true" (case-insensitive) is True
         parallel_str = params.get('/reco/exp/parallel_enabled', 'false').lower()
         parallel_enabled = parallel_str == 'true'
+
+        interleave_method = params.get('/reco/exp/interleave_method', 'team_draft')
         
         return ExperimentConfig(
             mode=mode,
             sampling_rate=sampling_rate,
-            parallel_enabled=parallel_enabled
+            parallel_enabled=parallel_enabled,
+            interleave_method=interleave_method
         )
 
     def _get_default_config(self) -> ExperimentConfig:
@@ -61,5 +66,6 @@ class ConfigManager:
         return ExperimentConfig(
             mode="A",
             sampling_rate=0.0,
-            parallel_enabled=False
+            parallel_enabled=False,
+            interleave_method="team_draft"
         )

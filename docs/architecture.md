@@ -36,11 +36,12 @@ Layer を使用しないため、アプリ内に設定取得ロジックを含�
 - `/reco/exp/interleave_method`: アルゴリズム指定
 - `/reco/exp/seed_strategy`: シード戦略
 
-## 自動最適化の展望 (Optimized Interleaving)
-将来的に **Optimized Interleaving**（確率的インターリービングにより、より良いランキングを探索する手法）を導入することで、手動での勝ち負け判定から「自動的な優勢実装への切り替え」への進化を見込みます。
+## 自動最適化 (Optimized Interleaving)
+**Probabilistic Interleaving (Softmax-based)** を実装済みです。
+Team Draft (決定論的) との設定切り替えが可能で、オンライン学習によるランキング最適化への道筋をつけています。
 
-1. **Streaming Ranker API**: 全件生成ではなく、`next_item()` で逐次アイテムを取り出せる I/F を用意します。これにより、必要な分だけ計算リソースを使用する効率的な探索が可能になります。
-2. **Online Learning**: 勝敗結果をオンライン学習し、勝率の高いランキング（強者）の露出率を自動的に高めるバンディット的な挙動を実現可能です。
+1. **Factory Pattern**: `get_interleaver(method)` により、Team Draft と Optimized (Probabilistic) をシームレスに切り替えます。
+2. **Probabilistic Selection**: 各アイテムのスコア(ランク由来)に基づき、Softmax確率でソースを選択。選択確率(`prob`)を記録し、不偏推定量(IPS)の計算を可能にします。
 3. **Graceful Degradation**: どちらかのアルゴリズムがエラーやタイムアウトを起こした場合でも、自動的に健全な側（またはBaseline）に倒す仕組みと統合します。
 
 ## ログ設計

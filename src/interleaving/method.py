@@ -109,4 +109,94 @@ class TeamDraftInterleaver:
                     # It will try to let A pick again.
                     pass
                     
+
+        return result
+
+class OptimizedInterleaver:
+    def __init__(self, tau: float = 3.0, seed: Optional[int] = None):
+        self.tau = tau
+        self.rng = random.Random(seed)
+
+    def interleave(self, list_a: List[Item], list_b: List[Item]) -> List[Item]:
+        """
+        Optimized Interleaving (Softmax-based):
+        Uses softmax function on rank-based scores to probabilistically select
+        from list A or list B.
+        
+        Score = 1 / (rank + 1)^tau
+        P(A) = exp(Score_A) / (exp(Score_A) + exp(Score_B))
+        """
+        import math
+        
+        result: List[Item] = []
+        used_ids: Set[str] = set()
+        
+        idx_a = 0
+        idx_b = 0
+        
+        len_a = len(list_a)
+        len_b = len(list_b)
+        
+        while idx_a < len_a or idx_b < len_b:
+            # Advance pointers to find next available items
+            while idx_a < len_a and list_a[idx_a].id in used_ids:
+                idx_a += 1
+            
+            while idx_b < len_b and list_b[idx_b].id in used_ids:
+                idx_b += 1
+            
+            cand_a = list_a[idx_a] if idx_a < len_a else None
+            cand_b = list_b[idx_b] if idx_b < len_b else None
+            
+            if cand_a is None and cand_b is None:
+                break
+            
+            selected_item = None
+            prob_a = 0.0
+            source = ""
+            
+            if cand_a and cand_b:
+                # Both available, use Softmax
+                score_a = 1.0 / ((idx_a + 1) ** self.tau)
+                score_b = 1.0 / ((idx_b + 1) ** self.tau)
+                
+                denom = math.exp(score_a) + math.exp(score_b)
+                prob_a = math.exp(score_a) / denom
+                
+                if self.rng.random() < prob_a:
+                    selected_item = cand_a
+                    source = "A"
+                    # item probability is P(A)
+                    selected_item.prob = prob_a
+                else:
+                    selected_item = cand_b
+                    source = "B"
+                    # item probability is P(B) = 1 - P(A)
+                    selected_item.prob = 1.0 - prob_a
+                    
+            elif cand_a:
+                # Only A available
+                selected_item = cand_a
+                source = "A"
+                selected_item.prob = 1.0
+            else:
+                # Only B available
+                selected_item = cand_b
+                source = "B"
+                selected_item.prob = 1.0
+            
+            if selected_item:
+                selected_item.source_ranker = source
+                result.append(selected_item)
+                used_ids.add(selected_item.id)
+                # Note: We don't manually increment index here because the loop structure 
+                # will skip used IDs in the next iteration's "Advance pointers" phase.
+                # BUT, if we don't increment, we will check the same ID again as "in used_ids".
+                # It's better to increment the one we picked to save one check, but not strictly required.
+                # However, for clarity and avoiding infinite loop if logic is wrong:
+                if source == "A":
+                    idx_a += 1
+                else:
+                    idx_b += 1
+        
         return result

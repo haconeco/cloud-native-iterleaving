@@ -8,6 +8,7 @@ class Item:
     score: float
     source_ranker: Optional[str] = None  # "A" or "B"
     original_rank: Optional[int] = None
+    prob: Optional[float] = None
     meta: Dict[str, Any] = field(default_factory=dict)
 
 @dataclass
